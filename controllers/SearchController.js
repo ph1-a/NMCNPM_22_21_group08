@@ -1,15 +1,35 @@
-const SearchService = require('../services/SearchService');
+const SearchServices = require('../services/SearchServices');
 
 module.exports = {
   search: async (req, res) => {
     try {
-      const { q } = req.query;
-      if (!q) return res.status(400).json({ error: 'Missing query' });
+      const { query, filters } = req.query;
+      
+      if (!query) {
+        return res.status(400).json({ 
+          error: 'Search query is required' 
+        });
+      }
 
-      const result = await SearchService.searchAll(q);
-      res.status(200).json(result);
+      const results = await SearchServices.searchAll(query);
+      
+      // Apply any additional filters if provided
+      if (filters) {
+        const filterParams = JSON.parse(filters);
+        if (filterParams.maxPrice) {
+          results.foods = results.foods.filter(food => food.price <= filterParams.maxPrice);
+        }
+        if (filterParams.minRating) {
+          results.restaurants = results.restaurants.filter(restaurant => restaurant.rating >= filterParams.minRating);
+        }
+      }
+
+      res.json(results);
     } catch (err) {
-      res.status(500).json({ error: 'Search failed', details: err.message });
+      console.error('Search controller error:', err);
+      res.status(500).json({ 
+        error: 'An error occurred while performing the search' 
+      });
     }
   }
 };

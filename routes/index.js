@@ -1,8 +1,22 @@
-//API route for sign up and sign in
 const express = require('express');
-const app = express();
-const userRoutes = require('./routes/userRoutes');
+const router = express.Router();
+const userRoutes = require('./UserRoutes');
+const searchRoutes = require('./SearchRoutes');
+const orderRoutes = require('./OrderRoutes');
 
+// User routes
+router.use('/users', userRoutes);
+
+// Search routes
+router.use('/search', searchRoutes);
+
+// Order routes
+router.use('/orders', orderRoutes);
+
+module.exports = router;
+
+//API route for sign up and sign in
+const app = express();
 app.use(express.json());
 app.use('/api/users', userRoutes);
 //Usage
@@ -15,7 +29,6 @@ app.use('/api/users', userRoutes);
 //}
 
 //API route for search
-const searchRoutes = require('./routes/searchRoutes');
 app.use('/api/search', searchRoutes);
 
 //Usage
@@ -29,6 +42,5 @@ app.use('/api/search', searchRoutes);
 //}
 
 //API Route for order
-const orderRoutes = require('./routes/orderRoutes');
 app.use('/api/orders', orderRoutes);
 

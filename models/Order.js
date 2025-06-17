@@ -1,33 +1,33 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
-const Order = require('./Order');
 
-const Transaction = sequelize.define('Transaction', {
+const Order = sequelize.define('Order', {
   id: {
     type: DataTypes.UUID,
     defaultValue: DataTypes.UUIDV4,
     primaryKey: true
   },
-  orderId: {
+  userId: {
     type: DataTypes.UUID,
     allowNull: false
   },
-  paymentMethod: {
-    type: DataTypes.STRING,
+  restaurantId: {
+    type: DataTypes.UUID,
     allowNull: false
   },
-  amount: {
-    type: DataTypes.FLOAT,
+  address: {
+    type: DataTypes.STRING,
     allowNull: false
   },
   status: {
     type: DataTypes.STRING,
     allowNull: false,
     defaultValue: 'Pending'
+  },
+  total: {
+    type: DataTypes.DECIMAL(10, 2),
+    allowNull: false
   }
 });
 
-Transaction.belongsTo(Order, { foreignKey: 'orderId' });
-Order.hasOne(Transaction, { foreignKey: 'orderId' });
-
-module.exports = Transaction;
+module.exports = Order; 
