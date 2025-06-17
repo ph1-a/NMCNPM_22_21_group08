@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { searchApi } from '../services/api';
 
 const MOCK_OFFERS = [
   {
@@ -142,7 +143,8 @@ const sortOffers = (offers, sortBy = 'relevance') => {
 };
 
 export const useSearchViewModel = (navigation, route) => {
-  const [searchTerm, setSearchTerm] = useState('');
+  const initialTerm = route?.params?.food || '';
+  const [searchTerm, setSearchTerm] = useState(initialTerm);
   const [results, setResults] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -153,44 +155,88 @@ export const useSearchViewModel = (navigation, route) => {
     maxDistance: null,
   });
 
+  useEffect(() => {
+    if (initialTerm) {
+      setSearchTerm(initialTerm);
+    }
+  }, [initialTerm]);
+
   // Enhanced search function that handles the new data structure
   const performSearch = async (term, currentSortBy = sortBy, currentFilters = filters) => {
+    console.log('SearchViewModel: Starting search with term:', term);
+    
+    if (!term || term.trim() === '') {
+      console.log('SearchViewModel: Empty search term, clearing results');
+      setResults([]);
+      setError(null);
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
 
     try {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 300));
+      console.log('SearchViewModel: Calling search API with term:', term, 'filters:', currentFilters);
+      const searchResults = await searchApi.search(term, currentFilters);
+      console.log('SearchViewModel: Received search results:', searchResults);
       
-      // In a real app, this would be an actual API call:
-      // const response = await fetch(`https://your-api-endpoint/search?query=${encodeURIComponent(term)}&sort=${currentSortBy}`);
-      // if (!response.ok) {
-      //   throw new Error('Failed to fetch search results');
-      // }
-      // const data = await response.json();
-      
-      // Filter offers based on search term
-      let filteredResults = filterOffers(MOCK_OFFERS, term);
-      
-      // Apply additional filters
-      if (currentFilters.maxPrice) {
-        filteredResults = filteredResults.filter(offer => offer.price <= currentFilters.maxPrice);
+      if (!searchResults || (!searchResults.restaurants && !searchResults.foods)) {
+        console.log('SearchViewModel: No valid results found');
+        setResults([]);
+        return;
       }
       
-      if (currentFilters.minRating) {
-        filteredResults = filteredResults.filter(offer => offer.rating >= currentFilters.minRating);
-      }
+      // Transform the API response to match our frontend data structure
+      const transformedResults = [
+        ...(searchResults.restaurants || []).map(restaurant => ({
+          id: restaurant.id,
+          name: restaurant.name,
+          restaurant: restaurant.name,
+          restaurantName: restaurant.name,
+          dishName: restaurant.name,
+          price: restaurant.price || 0,
+          rating: restaurant.rating || 0,
+          reviewCount: restaurant.reviewCount || 0,
+          distance: restaurant.distance || 0,
+          description: restaurant.description || '',
+          image: restaurant.image || require('../assets/images/food_1.jpg'),
+          reviews: restaurant.reviews || []
+        })),
+        ...(searchResults.foods || []).map(food => ({
+          id: food.id,
+          name: food.name,
+          restaurant: food.Restaurant?.name || 'Unknown Restaurant',
+          restaurantName: food.Restaurant?.name || 'Unknown Restaurant',
+          dishName: food.name,
+          price: food.price || 0,
+          rating: food.rating || 0,
+          reviewCount: food.reviewCount || 0,
+          distance: food.distance || 0,
+          description: food.description || '',
+          image: food.image || require('../assets/images/food_1.jpg'),
+          reviews: food.Reviews?.map(review => ({
+            id: review.id,
+            username: review.username,
+            userInitial: review.userInitial,
+            comment: review.comment,
+            rating: review.rating
+          })) || []
+        }))
+      ];
       
-      if (currentFilters.maxDistance) {
-        filteredResults = filteredResults.filter(offer => offer.distance <= currentFilters.maxDistance);
-      }
+      console.log('SearchViewModel: Transformed results:', transformedResults);
       
       // Sort results
-      const sortedResults = sortOffers(filteredResults, currentSortBy);
+      const sortedResults = sortOffers(transformedResults, currentSortBy);
+      console.log('SearchViewModel: Final sorted results:', sortedResults);
       
       setResults(sortedResults);
     } catch (err) {
-      console.error('Search error:', err);
+      console.error('SearchViewModel: Error during search:', {
+        message: err.message,
+        stack: err.stack,
+        name: err.name
+      });
       setError(err.message || 'An error occurred while searching');
       setResults([]);
     } finally {

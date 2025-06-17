@@ -9,10 +9,12 @@ import {
   TouchableOpacity,
   ScrollView,
   TextInput,
+  Alert,
 } from 'react-native';
 import { COLORS, SIZES, FONTS } from '../utils/Constants';
 import Icon from 'react-native-vector-icons/Feather';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import { orderApi } from '../services/api';
 
 const CheckoutItemCard = ({ item, onQuantityChange }) => (
   <View style={styles.itemCard}>
@@ -69,15 +71,30 @@ const CheckoutView = ({ navigation, route }) => {
   const tax = calculateSubtotal() * 0.08; // 8% tax
   const total = calculateSubtotal() + deliveryFee + tax;
 
-  const handlePlaceOrder = () => {
-    console.log('Order placed:', {
-      items,
-      deliveryAddress,
-      paymentMethod,
-      total: total.toFixed(2)
-    });
-    // Navigate to order confirmation or success screen
-    // navigation.navigate('OrderSuccess');
+  const handlePlaceOrder = async () => {
+    if (items.length === 0) {
+      Alert.alert('Empty Cart', 'Please add items to your cart before placing an order.');
+      return;
+    }
+    if (!deliveryAddress.trim()) {
+      Alert.alert('Missing Address', 'Please enter your delivery address.');
+      return;
+    }
+
+    try {
+      const token = 'YOUR_AUTH_TOKEN_HERE';
+      const orderData = {
+        items: items.map(item => ({
+          menuItemId: item.id,
+          quantity: item.quantity
+        })),
+        address: deliveryAddress
+      };
+      await orderApi.createOrder(orderData, token);
+      navigation.navigate('PaymentSuccess');
+    } catch (error) {
+      Alert.alert('Order Failed', error.message || 'Could not place order.');
+    }
   };
 
   return (
