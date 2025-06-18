@@ -8,12 +8,12 @@ const Order = sequelize.define('Order', {
     primaryKey: true
   },
   userId: {
-    type: DataTypes.UUID, // Keep as UUID to match your DB schema
+    type: DataTypes.UUID,
     allowNull: false
   },
   restaurantId: {
-    type: DataTypes.UUID, // Keep as UUID to match your DB schema
-    allowNull: false
+    type: DataTypes.UUID,
+    allowNull: true
   },
   address: {
     type: DataTypes.STRING,
@@ -25,9 +25,9 @@ const Order = sequelize.define('Order', {
     defaultValue: 'Pending'
   },
   total: {
-    type: DataTypes.FLOAT, // Changed to FLOAT to match your DB schema
+    type: DataTypes.DECIMAL(10, 2),
     allowNull: false
   }
 });
 
-module.exports = Order;
+module.exports = Order; 

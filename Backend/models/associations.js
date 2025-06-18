@@ -15,6 +15,10 @@ MenuItem.hasMany(OrderItem, { foreignKey: 'itemId' });
 Restaurant.hasMany(Order, { foreignKey: 'restaurantId' });
 Order.belongsTo(Restaurant, { foreignKey: 'restaurantId' });
 
+// Restaurant-MenuItem associations
+Restaurant.hasMany(MenuItem, { foreignKey: 'restaurantId' });
+MenuItem.belongsTo(Restaurant, { foreignKey: 'restaurantId' });
+
 module.exports = {
   Order,
   OrderItem,

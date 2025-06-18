@@ -6,17 +6,32 @@ module.exports = {
   createOrder: async (orderData, items) => {
     const order = await Order.create(orderData);
     
-    // Create order items using the provided data
-    const orderItems = items.map((item) => {
+    // Fetch menu items to get prices
+    const menuItems = await Promise.all(
+      items.map(item => MenuItem.findByPk(item.foodId))
+    );
+
+    // Create order items with proper mapping
+    const orderItems = items.map((item, index) => {
+      const menuItem = menuItems[index];
+      if (!menuItem) {
+        throw new Error(`Menu item ${item.foodId} not found`);
+      }
       return {
         orderId: order.id,
-        itemId: item.menuItemId, // Changed from foodId to menuItemId
+        itemId: item.foodId,
         quantity: item.quantity,
-        price: item.price // Use price from request
+        price: menuItem.price
       };
     });
 
     await OrderItem.bulkCreate(orderItems);
+    
+    // Calculate and update the order total
+    const total = orderItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    order.total = total;
+    await order.save();
+    
     return order;
   },
 
