@@ -12,6 +12,8 @@ import UserView from '../views/UserView';
 import SearchView from '../views/SearchView';
 import CheckoutView from '../views/CheckoutView';
 import PaymentSuccessView from '../views/PaymentSuccessView';
+import CardPaymentView from '../views/CardPaymentView';
+
 
 // Main Screens
 // import HomeView from '../views/HomeView/HomeView';
@@ -43,6 +45,7 @@ const AppNavigator = () => (
       <Stack.Screen name="Checkout" component={CheckoutView} />
       <Stack.Screen name ="Search" component={SearchView} />
       <Stack.Screen name ="PaymentSuccess" component={PaymentSuccessView}/>
+      <Stack.Screen name="CardPayment" component={CardPaymentView} />
     </Stack.Navigator>
   </NavigationContainer>
 );
