@@ -18,7 +18,11 @@ import { orderApi } from '../services/api';
 
 const CheckoutItemCard = ({ item, onQuantityChange }) => (
   <View style={styles.itemCard}>
-    <Image source={item.image} style={styles.itemImage} />
+    <Image 
+      source={{ uri: item.image }} 
+      style={styles.itemImage}
+      resizeMode="cover"
+    />
     <View style={styles.itemDetails}>
       <Text style={styles.itemName}>{item.name}</Text>
       <Text style={styles.itemBrand}>{item.brand}</Text>
@@ -85,7 +89,7 @@ const CheckoutView = ({ navigation, route }) => {
       const token = 'YOUR_AUTH_TOKEN_HERE';
       const orderData = {
         items: items.map(item => ({
-          menuItemId: item.id,
+          foodId: item.id,
           quantity: item.quantity
         })),
         address: deliveryAddress
