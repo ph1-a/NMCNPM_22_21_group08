@@ -1,3 +1,4 @@
+// src/views/SignUpView/SignUpView.js
 import React from 'react';
 import {
   SafeAreaView,
@@ -10,7 +11,6 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
-  ActivityIndicator,
 } from 'react-native';
 import { useSignUpViewModel } from '../viewmodels/SignUpViewModel';
 import { COLORS, SIZES, FONTS } from '../utils/Constants';
@@ -33,9 +33,6 @@ const SignUpView = ({ navigation }) => {
     setConfirmPassword,
     phoneNumber,
     setPhoneNumber,
-    email,
-    setEmail,
-    isLoading,
     handleSignUp,
     handleGoogleSignUp,
     handleAppleSignUp,
@@ -58,22 +55,12 @@ const SignUpView = ({ navigation }) => {
             <View style={styles.formContainer}>
               <TextInput
                 style={styles.input}
-                placeholder="Email"
-                placeholderTextColor={COLORS.grey}
-                value={email}
-                onChangeText={setEmail}
-                autoCapitalize="none"
-                keyboardType="email-address"
-                editable={!isLoading}
-              />
-              <TextInput
-                style={styles.input}
                 placeholder="Username"
                 placeholderTextColor={COLORS.grey}
                 value={username}
                 onChangeText={setUsername}
                 autoCapitalize="none"
-                editable={!isLoading}
+                keyboardType="email-address"
               />
               <TextInput
                 style={styles.input}
@@ -82,7 +69,6 @@ const SignUpView = ({ navigation }) => {
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry
-                editable={!isLoading}
               />
               <TextInput
                 style={styles.input}
@@ -91,7 +77,6 @@ const SignUpView = ({ navigation }) => {
                 value={confirmPassword}
                 onChangeText={setConfirmPassword}
                 secureTextEntry
-                editable={!isLoading}
               />
               <TextInput
                 style={styles.input}
@@ -100,18 +85,12 @@ const SignUpView = ({ navigation }) => {
                 value={phoneNumber}
                 onChangeText={setPhoneNumber}
                 keyboardType="phone-pad"
-                editable={!isLoading}
               />
               <TouchableOpacity
-                style={[styles.primaryButton, isLoading && styles.disabledButton]}
+                style={styles.primaryButton}
                 onPress={handleSignUp}
-                activeOpacity={0.8}
-                disabled={isLoading}>
-                {isLoading ? (
-                  <ActivityIndicator color={COLORS.white} size="small" />
-                ) : (
-                  <Text style={styles.primaryButtonText}>Continue</Text>
-                )}
+                activeOpacity={0.8}>
+                <Text style={styles.primaryButtonText}>Continue</Text>
               </TouchableOpacity>
             </View>
 
@@ -119,10 +98,9 @@ const SignUpView = ({ navigation }) => {
 
             <View style={styles.socialLoginContainer}>
               <TouchableOpacity
-                style={[styles.socialButton, isLoading && styles.disabledButton]}
+                style={styles.socialButton}
                 onPress={handleGoogleSignUp}
-                activeOpacity={0.8}
-                disabled={isLoading}>
+                activeOpacity={0.8}>
                 <Image
                   source={require('../assets/icons/google.png')}
                   style={styles.socialIcon}
@@ -130,10 +108,9 @@ const SignUpView = ({ navigation }) => {
                 <Text style={styles.socialButtonText}>Continue with Google</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.socialButton, isLoading && styles.disabledButton]}
+                style={styles.socialButton}
                 onPress={handleAppleSignUp}
-                activeOpacity={0.8}
-                disabled={isLoading}>
+                activeOpacity={0.8}>
                 <Image
                   source={require('../assets/icons/apple.png')}
                   style={styles.socialIcon}
@@ -213,9 +190,6 @@ const styles = StyleSheet.create({
   primaryButtonText: {
     ...FONTS.h3,
     color: COLORS.white,
-  },
-  disabledButton: {
-    opacity: 0.6,
   },
   dividerContainer: {
     flexDirection: 'row',

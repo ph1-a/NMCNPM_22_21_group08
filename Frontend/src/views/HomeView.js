@@ -9,8 +9,6 @@ import {
   TouchableOpacity,
   FlatList,
   ScrollView,
-  ActivityIndicator,
-  RefreshControl,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import { COLORS, SIZES, FONTS, STRINGS } from '../utils/Constants';
@@ -26,40 +24,11 @@ const QuickAccessButton = ({ iconName, label, onPress }) => (
   </TouchableOpacity>
 );
 
-const LoadingView = () => (
-  <View style={styles.loadingContainer}>
-    <ActivityIndicator size="large" color={COLORS.primary || COLORS.black} />
-    <Text style={styles.loadingText}>Loading offers...</Text>
-  </View>
-);
-
-const ErrorView = ({ error, onRetry }) => (
-  <View style={styles.errorContainer}>
-    <Icon name="wifi-off" size={48} color={COLORS.gray} />
-    <Text style={styles.errorTitle}>Connection Error</Text>
-    <Text style={styles.errorMessage}>{error}</Text>
-    <TouchableOpacity style={styles.retryButton} onPress={onRetry}>
-      <Text style={styles.retryButtonText}>Try Again</Text>
-    </TouchableOpacity>
-  </View>
-);
-
-const EmptyOffersView = () => (
-  <View style={styles.emptyContainer}>
-    <Icon name="package" size={48} color={COLORS.gray} />
-    <Text style={styles.emptyTitle}>No Offers Available</Text>
-    <Text style={styles.emptyMessage}>Check back later for delicious deals!</Text>
-  </View>
-);
-
 const HomeView = ({ navigation }) => {
   const {
     searchTerm,
     setSearchTerm,
     offers,
-    loading,
-    error,
-    retryLoadOffers,
     onOrderHistoryPress,
     onTrackOrderPress,
     onOfferPress,
@@ -107,57 +76,25 @@ const HomeView = ({ navigation }) => {
     </View>
   );
 
-  const renderBestOffers = () => {
-    if (loading) {
-      return (
-        <View style={styles.section}>
-          {renderSectionHeader(STRINGS.todaysBestOffer, onSeeAllOffersPress)}
-          <View style={styles.divider}/>
-          <LoadingView />
-        </View>
-      );
-    }
-
-    if (error) {
-      return (
-        <View style={styles.section}>
-          {renderSectionHeader(STRINGS.todaysBestOffer, onSeeAllOffersPress)}
-          <View style={styles.divider}/>
-          <ErrorView error={error} onRetry={retryLoadOffers} />
-        </View>
-      );
-    }
-
-    if (!offers || offers.length === 0) {
-      return (
-        <View style={styles.section}>
-          {renderSectionHeader(STRINGS.todaysBestOffer, onSeeAllOffersPress)}
-          <View style={styles.divider}/>
-          <EmptyOffersView />
-        </View>
-      );
-    }
-
-    return (
-      <View style={styles.section}>
-        {renderSectionHeader(STRINGS.todaysBestOffer, onSeeAllOffersPress)}
-        <View style={styles.divider}/>
-        <FlatList
-          data={offers}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          keyExtractor={(item) => item.id?.toString() || Math.random().toString()}
-          renderItem={({ item }) => (
-            <OfferCard 
-              item={item} 
-              onPress={() => onOfferPress(item)}
-            />
-          )}
-          contentContainerStyle={{ paddingLeft: SIZES.padding }}
-        />
-      </View>
-    );
-  };
+  const renderBestOffers = () => (
+    <View style={styles.section}>
+      {renderSectionHeader(STRINGS.todaysBestOffer, onSeeAllOffersPress)}
+      <View style={styles.divider}/>
+      <FlatList
+        data={offers}
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => (
+          <OfferCard 
+            item={item} 
+            onPress={() => onOfferPress(item)} // Pass the complete item data
+          />
+        )}
+        contentContainerStyle={{ paddingLeft: SIZES.padding }}
+      />
+    </View>
+  );
   
   const renderBottomNav = () => (
     <View style={styles.bottomNavContainer}>
@@ -175,17 +112,7 @@ const HomeView = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ScrollView 
-        style={styles.container} 
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl
-            refreshing={loading}
-            onRefresh={retryLoadOffers}
-            colors={[COLORS.primary || COLORS.black]}
-          />
-        }
-      >
+      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
         {renderHeader()}
         {renderSearchBar()}
         {renderQuickAccess()}
@@ -305,64 +232,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#ccc',
     marginTop: 0.01,
     marginBottom: 30,
-  },
-  // Loading states
-  loadingContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 40,
-  },
-  loadingText: {
-    ...FONTS.body3,
-    color: COLORS.gray,
-    marginTop: 10,
-  },
-  // Error states
-  errorContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 40,
-    paddingHorizontal: SIZES.padding,
-  },
-  errorTitle: {
-    ...FONTS.h3,
-    color: COLORS.black,
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  errorMessage: {
-    ...FONTS.body3,
-    color: COLORS.gray,
-    textAlign: 'center',
-    marginBottom: 20,
-  },
-  retryButton: {
-    backgroundColor: COLORS.primary || COLORS.black,
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: SIZES.radius,
-  },
-  retryButtonText: {
-    ...FONTS.body3,
-    color: COLORS.white,
-    fontWeight: 'bold',
-  },
-  // Empty state
-  emptyContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 40,
-  },
-  emptyTitle: {
-    ...FONTS.h3,
-    color: COLORS.black,
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  emptyMessage: {
-    ...FONTS.body3,
-    color: COLORS.gray,
-    textAlign: 'center',
   },
 });
 

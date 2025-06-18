@@ -52,10 +52,10 @@ export const STRINGS = {
   loginErrorMessage: 'Incorrect username or password.\nPlease try again.',
   
   searchPlaceholder: 'Search',
-  quickAccess: 'Quick Access',
-  orderHistory: 'History Order',
-  trackingOrder: 'Tracking Order',
-  todaysBestOffer: 'Do you like?',
+  quickAccess: 'Chức năng',
+  orderHistory: 'Lịch sử',
+  trackingOrder: 'Theo dõi',
+  todaysBestOffer: 'Có thể bạn sẽ thích?',
 };
 
 const appTheme = { COLORS, SIZES, FONTS, STRINGS };

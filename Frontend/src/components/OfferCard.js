@@ -1,3 +1,5 @@
+// src/components/OfferCard.js
+
 import React from 'react';
 import {
   View,
@@ -17,17 +19,6 @@ const OfferCard = ({ item, onPress }) => {
   const handlePress = () => {
     onPress(item.id);
   };
-
-  // Helper function to format review count
-  const formatReviewCount = (count) => {
-    if (!count || count === 0) return '(No reviews)';
-    if (count >= 1000) return `(${Math.floor(count / 1000)}k reviews)`;
-    return `(${count} reviews)`;
-  };
-
-  // Get rating and review data from item, with fallbacks
-  const rating = item.rating || item.averageRating || 0;
-  const reviewCount = item.reviewCount || item.reviews || 0;
 
   return (
     <TouchableOpacity 
@@ -59,12 +50,8 @@ const OfferCard = ({ item, onPress }) => {
         
         <View style={styles.ratingContainer}>
           <Icon name="star" size={14} color="#FFD700" fill="#FFD700" />
-          <Text style={styles.ratingText}>
-            {rating > 0 ? rating.toFixed(1) : 'N/A'}
-          </Text>
-          <Text style={styles.reviewText}>
-            {formatReviewCount(reviewCount)}
-          </Text>
+          <Text style={styles.ratingText}>4.5</Text>
+          <Text style={styles.reviewText}>(120+ reviews)</Text>
         </View>
       </View>
     </TouchableOpacity>

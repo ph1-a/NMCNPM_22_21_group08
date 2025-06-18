@@ -47,8 +47,8 @@ describe('API Service', () => {
   describe('createOrder', () => {
     it('should create order successfully', async () => {
       const orderData = {
-        items: [{ dishId: 1, quantity: 2 }],
-        deliveryAddress: '123 Test St'
+        items: [{ foodId: 1, quantity: 2 }],
+        address: '123 Test St'
       };
 
       const mockResponse = { orderId: 123, status: 'pending' };

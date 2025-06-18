@@ -1,4 +1,3 @@
-// export default SearchView;
 import React, { useState, useCallback, useRef, memo } from 'react';
 import {
   SafeAreaView,
@@ -16,70 +15,22 @@ import { COLORS, SIZES, FONTS } from '../utils/Constants';
 import Icon from 'react-native-vector-icons/Feather';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
-// Restaurant Card Component
-const RestaurantCard = memo(
-  ({ item, onRestaurantPress }) => {
-    console.log(`RestaurantCard rendered: ${item.id}`);
+// Tối ưu SearchResultCard
+const SearchResultCard = memo(
+  ({ item, onOrderPress }) => {
+    console.log(`SearchResultCard rendered: ${item.id}`); // Debug render
     return (
-      <TouchableOpacity style={styles.restaurantCardContainer} onPress={() => onRestaurantPress(item)}>
-        <Image source={item.image} style={styles.restaurantCardImage} />
-        <View style={styles.restaurantCardContent}>
-          <View style={styles.restaurantCardHeader}>
-            <Text style={styles.restaurantCardTitle}>{item.name}</Text>
-            <View style={styles.restaurantRatingContainer}>
-              <Icon name="star" size={16} color="#FFD700" fill="#FFD700" />
-              <Text style={styles.restaurantRatingText}>{item.rating}</Text>
-            </View>
-          </View>
-          
-          <Text style={styles.restaurantDescription} numberOfLines={2}>
-            {item.description || 'Delicious food and great service'}
-          </Text>
-          
-          <View style={styles.restaurantMetaContainer}>
-            <View style={styles.restaurantMetaItem}>
-              <Ionicons name="location-outline" size={16} color={COLORS.textSecondary} />
-              <Text style={styles.restaurantMetaText}>{item.distance} miles</Text>
-            </View>
-            <View style={styles.restaurantMetaItem}>
-              <Icon name="users" size={16} color={COLORS.textSecondary} />
-              <Text style={styles.restaurantMetaText}>{item.reviewCount} reviews</Text>
-            </View>
-            <View style={styles.restaurantMetaItem}>
-              <Icon name="clock" size={16} color={COLORS.textSecondary} />
-              <Text style={styles.restaurantMetaText}>25-35 min</Text>
-            </View>
-          </View>
-          
-          <View style={styles.restaurantFooter}>
-            <Text style={styles.restaurantPriceRange}>${Math.max(5, item.price - 5)} - ${item.price + 10}</Text>
-            <TouchableOpacity style={styles.viewMenuButton}>
-              <Text style={styles.viewMenuButtonText}>View Menu</Text>
-              <Icon name="arrow-right" size={16} color={COLORS.primary} />
-            </TouchableOpacity>
-          </View>
-        </View>
-      </TouchableOpacity>
-    );
-  },
-  (prevProps, nextProps) =>
-    prevProps.item.id === nextProps.item.id &&
-    prevProps.onRestaurantPress === nextProps.onRestaurantPress,
-);
-
-// Dish Card Component (existing format)
-const DishCard = memo(
-  ({ item, onOrderPress, onItemPress }) => {
-    console.log(`DishCard rendered: ${item.id}`);
-    return (
-      <TouchableOpacity style={styles.dishCardContainer} onPress={() => onItemPress(item)}>
-        <Image source={item.image} style={styles.dishCardImage} />
-        <View style={styles.dishCardDetailsContainer}>
-          <Text style={styles.dishCardTitle}>{item.name}</Text>
-          <Text style={styles.dishRestaurantName}>{item.restaurantName}</Text>
-          <View style={styles.dishCardMetaContainer}>
+      <View style={styles.cardContainer}>
+        <Image 
+          source={{ uri: item.image }} 
+          style={styles.cardImage}
+          resizeMode="cover"
+        />
+        <View style={styles.cardDetailsContainer}>
+          <Text style={styles.cardTitle}>{item.name}</Text>
+          <View style={styles.cardMetaContainer}>
             <Icon name="star" size={14} color={COLORS.textSecondary} />
-            <Text style={styles.dishCardMetaText}>
+            <Text style={styles.cardMetaText}>
               {item.rating} ({item.reviewCount} reviews)
             </Text>
             <Ionicons
@@ -88,69 +39,33 @@ const DishCard = memo(
               color={COLORS.textSecondary}
               style={{ marginLeft: SIZES.base }}
             />
-            <Text style={styles.dishCardMetaText}>{item.distance} miles</Text>
+            <Text style={styles.cardMetaText}>{item.distance} miles</Text>
           </View>
-          <View style={styles.dishCardFooter}>
+          <View style={styles.cardFooter}>
             <View style={styles.priceContainer}>
-              <Text style={styles.dishCardPrice}>${item.price.toFixed(2)}</Text>
-              <Text style={styles.dishCardPortionText}>/ portion</Text>
+              <Text style={styles.cardPrice}>${item.price.toFixed(2)}</Text>
+              <Text style={styles.cardPortionText}>/ portion</Text>
             </View>
             <TouchableOpacity
               style={styles.orderButton}
-              onPress={(e) => {
-                e.stopPropagation();
-                onOrderPress(item);
-              }}
+              onPress={() => onOrderPress(item)}
             >
               <Text style={styles.orderButtonText}>Order</Text>
             </TouchableOpacity>
           </View>
         </View>
-      </TouchableOpacity>
+      </View>
     );
   },
   (prevProps, nextProps) =>
     prevProps.item.id === nextProps.item.id &&
-    prevProps.onOrderPress === nextProps.onOrderPress &&
-    prevProps.onItemPress === nextProps.onItemPress,
+    prevProps.onOrderPress === nextProps.onOrderPress,
 );
 
-// Combined Search Result Card
-const SearchResultCard = memo(
-  ({ item, onOrderPress, onItemPress, onRestaurantPress }) => {
-    // Determine if this is a restaurant or dish based on the data
-    // If it has a restaurantName that's different from name, it's likely a dish
-    // If name === restaurantName or no restaurantName, it's likely a restaurant
-    const isRestaurant = !item.restaurantName || item.name === item.restaurantName || item.type === 'restaurant';
-    
-    if (isRestaurant) {
-      return (
-        <RestaurantCard 
-          item={item} 
-          onRestaurantPress={onRestaurantPress}
-        />
-      );
-    } else {
-      return (
-        <DishCard 
-          item={item} 
-          onOrderPress={onOrderPress}
-          onItemPress={onItemPress}
-        />
-      );
-    }
-  },
-  (prevProps, nextProps) =>
-    prevProps.item.id === nextProps.item.id &&
-    prevProps.onOrderPress === nextProps.onOrderPress &&
-    prevProps.onItemPress === nextProps.onItemPress &&
-    prevProps.onRestaurantPress === nextProps.onRestaurantPress,
-);
-
-// Search Input Component (unchanged)
+// Tối ưu SearchInput
 const SearchInput = memo(
   ({ value, onChangeText, onSubmitEditing, onClear, inputRef }) => {
-    console.log('SearchInput rendered');
+    console.log('SearchInput rendered'); // Debug render
     return (
       <View style={styles.searchContainer}>
         <Icon
@@ -165,7 +80,7 @@ const SearchInput = memo(
           value={value}
           onChangeText={onChangeText}
           onSubmitEditing={onSubmitEditing}
-          placeholder="Search restaurants or dishes..."
+          placeholder="Tìm kiếm món ăn..."
           returnKeyType="search"
           autoCorrect={false}
           autoCapitalize="none"
@@ -183,101 +98,34 @@ const SearchInput = memo(
     prevProps.onClear === nextProps.onClear,
 );
 
-// New Sort Bar Component with three separate buttons
-const SortBar = memo(
-  ({ onPriceSort, onRatingSort, onDistanceSort, activeSortBy, resultCount }) => {
-    console.log('SortBar rendered');
+// Tối ưu FilterBar
+const FilterBar = memo(
+  ({ onFilterPress, onSortPress, resultCount }) => {
+    console.log('FilterBar rendered'); // Debug render
     return (
-      <View style={styles.sortBar}>
-        <View style={styles.sortButtonsContainer}>
-          <TouchableOpacity 
-            style={[
-              styles.sortButton, 
-              (activeSortBy === 'price_low' || activeSortBy === 'price_high') && styles.sortButtonActive
-            ]} 
-            onPress={onPriceSort}
-          >
-            <Icon 
-              name="dollar-sign" 
-              size={16} 
-              color={(activeSortBy === 'price_low' || activeSortBy === 'price_high') ? COLORS.primary : COLORS.textPrimary} 
-            />
-            <Text style={[
-              styles.sortButtonText,
-              (activeSortBy === 'price_low' || activeSortBy === 'price_high') && styles.sortButtonTextActive
-            ]}>
-              Price
-            </Text>
-            {(activeSortBy === 'price_low' || activeSortBy === 'price_high') && (
-              <Icon 
-                name={activeSortBy === 'price_low' ? 'arrow-up' : 'arrow-down'} 
-                size={14} 
-                color={COLORS.primary} 
-              />
-            )}
+      <View style={styles.filterBar}>
+        <View style={styles.filterButtonsContainer}>
+          <TouchableOpacity style={styles.filterButton} onPress={onFilterPress}>
+            <Text style={styles.filterButtonText}>Lọc</Text>
+            <Icon name="chevron-down" size={16} color={COLORS.textPrimary} />
           </TouchableOpacity>
-
-          <TouchableOpacity 
-            style={[
-              styles.sortButton, 
-              activeSortBy === 'rating' && styles.sortButtonActive
-            ]} 
-            onPress={onRatingSort}
-          >
-            <Icon 
-              name="star" 
-              size={16} 
-              color={activeSortBy === 'rating' ? COLORS.primary : COLORS.textPrimary} 
-            />
-            <Text style={[
-              styles.sortButtonText,
-              activeSortBy === 'rating' && styles.sortButtonTextActive
-            ]}>
-              Rating
-            </Text>
-            {activeSortBy === 'rating' && (
-              <Icon name="arrow-down" size={14} color={COLORS.primary} />
-            )}
-          </TouchableOpacity>
-
-          <TouchableOpacity 
-            style={[
-              styles.sortButton, 
-              activeSortBy === 'distance' && styles.sortButtonActive
-            ]} 
-            onPress={onDistanceSort}
-          >
-            <Ionicons 
-              name="location-outline" 
-              size={16} 
-              color={activeSortBy === 'distance' ? COLORS.primary : COLORS.textPrimary} 
-            />
-            <Text style={[
-              styles.sortButtonText,
-              activeSortBy === 'distance' && styles.sortButtonTextActive
-            ]}>
-              Distance
-            </Text>
-            {activeSortBy === 'distance' && (
-              <Icon name="arrow-up" size={14} color={COLORS.primary} />
-            )}
+          <TouchableOpacity style={styles.filterButton} onPress={onSortPress}>
+            <Text style={styles.filterButtonText}>Sắp xếp</Text>
+            <Icon name="chevron-down" size={16} color={COLORS.textPrimary} />
           </TouchableOpacity>
         </View>
-        
-        <Text style={styles.resultsText}>{resultCount} result(s)</Text>
+        <Text style={styles.resultsText}>{resultCount} kết quả</Text>
       </View>
     );
   },
   (prevProps, nextProps) =>
     prevProps.resultCount === nextProps.resultCount &&
-    prevProps.activeSortBy === nextProps.activeSortBy &&
-    prevProps.onPriceSort === nextProps.onPriceSort &&
-    prevProps.onRatingSort === nextProps.onRatingSort &&
-    prevProps.onDistanceSort === nextProps.onDistanceSort,
+    prevProps.onFilterPress === nextProps.onFilterPress &&
+    prevProps.onSortPress === nextProps.onSortPress,
 );
 
 const SearchView = ({ navigation, route }) => {
-  console.log('SearchView rendered');
+  console.log('SearchView rendered'); // Debug render
   const {
     searchTerm,
     setSearchTerm,
@@ -285,10 +133,10 @@ const SearchView = ({ navigation, route }) => {
     resultCount,
     isLoading,
     error,
-    sortBy,
-    setSortBy,
     onOrderPress,
     onEditSearch,
+    onFilterPress,
+    onSortPress,
     onHomePress,
     onCartPress,
     onPersonPress,
@@ -298,64 +146,12 @@ const SearchView = ({ navigation, route }) => {
   const [selectedItems, setSelectedItems] = useState([]);
   const inputRef = useRef(null);
 
-  // Handle dish item press - navigate to dish detail
-  const handleItemPress = useCallback((item) => {
-    const dishData = {
-      id: item.id,
-      name: item.name,
-      price: item.price,
-      rating: item.rating,
-      reviewCount: item.reviewCount,
-      distance: item.distance,
-      restaurantName: item.restaurantName || `Restaurant for ${item.name}`,
-      description: item.description || `Delicious ${item.name} with ${item.rating} stars rating. Located ${item.distance} miles away with ${item.reviewCount} reviews from satisfied customers.`,
-      image: item.image,
-      reviews: item.reviews || [
-        {
-          id: '1',
-          userInitial: 'J',
-          username: 'John Doe',
-          comment: 'Great food and excellent service!',
-          rating: item.rating
-        },
-        {
-          id: '2',
-          userInitial: 'S',
-          username: 'Sarah Smith',
-          comment: 'Loved the taste and presentation.',
-          rating: item.rating
-        }
-      ]
-    };
-
-    navigation.navigate('DishDetail', { dish: dishData });
-  }, [navigation]);
-
-  // Handle restaurant press - navigate to restaurant detail or menu
-  const handleRestaurantPress = useCallback((item) => {
-    // You can navigate to a restaurant detail page or menu page
-    // For now, let's create a restaurant detail structure
-    const restaurantData = {
-      id: item.id,
-      name: item.name,
-      rating: item.rating,
-      reviewCount: item.reviewCount,
-      distance: item.distance,
-      description: item.description || `Great restaurant with ${item.rating} stars rating.`,
-      image: item.image,
-      priceRange: `$${Math.max(5, item.price - 5)} - $${item.price + 10}`,
-      reviews: item.reviews || []
-    };
-
-    // Navigate to restaurant detail (you'll need to create this screen)
-    navigation.navigate('RestaurantDetail', { restaurant: restaurantData });
-  }, [navigation]);
-
-  // Handle order press for dishes
+  // Handle order press - add item to selected items and navigate to checkout
   const handleOrderPress = useCallback((item) => {
+    // Convert search result item to cart item format
     const cartItem = {
       id: item.id,
-      brand: item.restaurantName || 'Restaurant',
+      brand: 'Restaurant', // You can modify this based on your data structure
       name: item.name,
       description: `${item.rating} stars • ${item.distance} miles`,
       price: item.price,
@@ -363,45 +159,17 @@ const SearchView = ({ navigation, route }) => {
       image: item.image,
     };
 
+    // Set the selected items (you can accumulate multiple items if needed)
     setSelectedItems([cartItem]);
     
+    // Navigate to checkout with the selected data
     navigation.navigate('Checkout', { 
       selectedItems: [cartItem],
       fromSearch: true 
     });
   }, [navigation]);
 
-  // Sort button handlers
-  const handlePriceSort = useCallback(() => {
-    // Cycle between price_low, price_high, and back to relevance
-    if (sortBy === 'price_low') {
-      setSortBy('price_high');
-    } else if (sortBy === 'price_high') {
-      setSortBy('relevance');
-    } else {
-      setSortBy('price_low');
-    }
-  }, [sortBy, setSortBy]);
-
-  const handleRatingSort = useCallback(() => {
-    // Toggle between rating and relevance
-    if (sortBy === 'rating') {
-      setSortBy('relevance');
-    } else {
-      setSortBy('rating');
-    }
-  }, [sortBy, setSortBy]);
-
-  const handleDistanceSort = useCallback(() => {
-    // Toggle between distance and relevance
-    if (sortBy === 'distance') {
-      setSortBy('relevance');
-    } else {
-      setSortBy('distance');
-    }
-  }, [sortBy, setSortBy]);
-
-  // Memoized callbacks
+  // Memoize các callback
   const memoizedSetInputText = useCallback((text) => {
     setInputText(text);
   }, []);
@@ -429,11 +197,9 @@ const SearchView = ({ navigation, route }) => {
           onClear={memoizedOnEditSearch}
           inputRef={inputRef}
         />
-        <SortBar
-          onPriceSort={handlePriceSort}
-          onRatingSort={handleRatingSort}
-          onDistanceSort={handleDistanceSort}
-          activeSortBy={sortBy}
+        <FilterBar
+          onFilterPress={onFilterPress}
+          onSortPress={onSortPress}
           resultCount={resultCount}
         />
         {isLoading && (
@@ -453,10 +219,8 @@ const SearchView = ({ navigation, route }) => {
       memoizedSetInputText,
       memoizedHandleSubmit,
       memoizedOnEditSearch,
-      handlePriceSort,
-      handleRatingSort,
-      handleDistanceSort,
-      sortBy,
+      onFilterPress,
+      onSortPress,
       resultCount,
       isLoading,
       error,
@@ -468,12 +232,7 @@ const SearchView = ({ navigation, route }) => {
       <FlatList
         data={results}
         renderItem={({ item }) => (
-          <SearchResultCard 
-            item={item} 
-            onOrderPress={handleOrderPress}
-            onItemPress={handleItemPress}
-            onRestaurantPress={handleRestaurantPress}
-          />
+          <SearchResultCard item={item} onOrderPress={handleOrderPress} />
         )}
         keyExtractor={(item) => item.id}
         ListHeaderComponent={renderListHeader}
@@ -527,19 +286,17 @@ const styles = StyleSheet.create({
     flex: 1,
     color: COLORS.textPrimary,
   },
-  
-  // New Sort Bar Styles
-  sortBar: {
+  filterBar: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: SIZES.padding,
   },
-  sortButtonsContainer: {
+  filterButtonsContainer: {
     flexDirection: 'row',
     gap: SIZES.base,
   },
-  sortButton: {
+  filterButton: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: COLORS.white,
@@ -550,116 +307,15 @@ const styles = StyleSheet.create({
     borderColor: COLORS.divider,
     gap: SIZES.base / 2,
   },
-  sortButtonActive: {
-    backgroundColor: '#F3F8FF',
-    borderColor: COLORS.primary,
-  },
-  sortButtonText: {
+  filterButtonText: {
     ...FONTS.body4,
     color: COLORS.textPrimary,
-  },
-  sortButtonTextActive: {
-    color: COLORS.primary,
-    fontWeight: '600',
   },
   resultsText: {
     ...FONTS.body4,
     color: COLORS.textSecondary,
   },
-
-  // Restaurant Card Styles
-  restaurantCardContainer: {
-    backgroundColor: COLORS.white,
-    borderRadius: SIZES.radius * 1.5,
-    marginBottom: SIZES.padding,
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 5,
-  },
-  restaurantCardImage: {
-    width: '100%',
-    height: 180,
-  },
-  restaurantCardContent: {
-    padding: SIZES.base * 2.5,
-  },
-  restaurantCardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: SIZES.base,
-  },
-  restaurantCardTitle: {
-    ...FONTS.h2,
-    color: COLORS.textPrimary,
-    flex: 1,
-    marginRight: SIZES.base,
-  },
-  restaurantRatingContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFF8E1',
-    paddingHorizontal: SIZES.base,
-    paddingVertical: SIZES.base / 2,
-    borderRadius: SIZES.radius,
-  },
-  restaurantRatingText: {
-    ...FONTS.body3,
-    color: '#F57C00',
-    marginLeft: SIZES.base / 2,
-    fontWeight: '600',
-  },
-  restaurantDescription: {
-    ...FONTS.body4,
-    color: COLORS.textSecondary,
-    lineHeight: 20,
-    marginBottom: SIZES.base * 1.5,
-  },
-  restaurantMetaContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: SIZES.base * 2,
-  },
-  restaurantMetaItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  restaurantMetaText: {
-    ...FONTS.body5,
-    color: COLORS.textSecondary,
-    marginLeft: SIZES.base / 2,
-  },
-  restaurantFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  restaurantPriceRange: {
-    ...FONTS.h3,
-    color: COLORS.primary,
-    fontWeight: '600',
-  },
-  viewMenuButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F3F8FF',
-    paddingHorizontal: SIZES.base * 2,
-    paddingVertical: SIZES.base,
-    borderRadius: SIZES.radius,
-  },
-  viewMenuButtonText: {
-    ...FONTS.body4,
-    color: COLORS.primary,
-    fontWeight: '600',
-    marginRight: SIZES.base / 2,
-  },
-
-  // Dish Card Styles (existing styles with prefix)
-  dishCardContainer: {
+  cardContainer: {
     backgroundColor: COLORS.white,
     borderRadius: SIZES.radius,
     marginBottom: SIZES.padding,
@@ -670,35 +326,29 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
-  dishCardImage: {
+  cardImage: {
     width: '100%',
     height: 150,
   },
-  dishCardDetailsContainer: {
+  cardDetailsContainer: {
     padding: SIZES.base * 2,
   },
-  dishCardTitle: {
+  cardTitle: {
     ...FONTS.h3,
     color: COLORS.textPrimary,
-    marginBottom: SIZES.base / 2,
-  },
-  dishRestaurantName: {
-    ...FONTS.body4,
-    color: COLORS.textSecondary,
     marginBottom: SIZES.base,
-    fontStyle: 'italic',
   },
-  dishCardMetaContainer: {
+  cardMetaContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: SIZES.base * 2,
   },
-  dishCardMetaText: {
+  cardMetaText: {
     ...FONTS.body4,
     color: COLORS.textSecondary,
     marginLeft: SIZES.base / 2,
   },
-  dishCardFooter: {
+  cardFooter: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -707,11 +357,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'baseline',
   },
-  dishCardPrice: {
+  cardPrice: {
     ...FONTS.h2,
     color: COLORS.textPrimary,
   },
-  dishCardPortionText: {
+  cardPortionText: {
     ...FONTS.body5,
     color: COLORS.textSecondary,
     marginLeft: SIZES.base / 2,
@@ -726,8 +376,6 @@ const styles = StyleSheet.create({
     ...FONTS.h4,
     color: COLORS.white,
   },
-
-  // Common Styles
   bottomTabBar: {
     position: 'absolute',
     bottom: 0,
