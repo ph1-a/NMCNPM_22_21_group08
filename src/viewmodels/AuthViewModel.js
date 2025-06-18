@@ -1,20 +1,28 @@
 // src/viewmodels/AuthViewModel.js
 import { useState } from 'react';
 import { Alert } from 'react-native';
+import { authApi } from '../services/api';
+import { tokenStorage } from '../utils/tokenStorage';
 
 export const useAuthViewModel = (navigation) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     if (!username || !password) {
       Alert.alert('Error', 'Please fill in both fields.');
       return;
     }
-    // API call to sign in would go here
-    console.log('Signing in with:', { username, password });
-    Alert.alert('Sign In', `Welcome back, ${username}`); 
-    navigation.navigate('Home');
+
+    try {
+      const result = await authApi.signin({ email: username, password });
+      tokenStorage.setToken(result.token);
+      console.log('Signing in with:', { username, password });
+      Alert.alert('Sign In', `Welcome back, ${username}`); 
+      navigation.navigate('Home');
+    } catch (error) {
+      Alert.alert('Login Failed', error.message || 'Invalid credentials');
+    }
   };
 
   const handleGoogleSignIn = () => {

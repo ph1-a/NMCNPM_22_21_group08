@@ -15,6 +15,7 @@ import { COLORS, SIZES, FONTS } from '../utils/Constants';
 import Icon from 'react-native-vector-icons/Feather';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { orderApi } from '../services/api';
+import { tokenStorage } from '../utils/tokenStorage';
 
 const CheckoutItemCard = ({ item, onQuantityChange }) => (
   <View style={styles.itemCard}>
@@ -86,7 +87,12 @@ const CheckoutView = ({ navigation, route }) => {
     }
 
     try {
-      const token = 'YOUR_AUTH_TOKEN_HERE';
+      const token = tokenStorage.getToken();
+      if (!token) {
+        Alert.alert('Authentication Required', 'Please sign in to place an order.');
+        return;
+      }
+
       const orderData = {
         items: items.map(item => ({
           foodId: item.id,

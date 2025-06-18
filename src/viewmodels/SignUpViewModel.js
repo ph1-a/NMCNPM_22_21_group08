@@ -1,6 +1,7 @@
 // src/viewmodels/SignUpViewModel.js
 import { useState } from 'react';
 import { Alert } from 'react-native';
+import { authApi } from '../services/api';
 
 export const useSignUpViewModel = (navigation) => {
   const [username, setUsername] = useState('');
@@ -8,7 +9,7 @@ export const useSignUpViewModel = (navigation) => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
 
-  const handleSignUp = () => {
+  const handleSignUp = async () => {
     if (!username || !password || !confirmPassword || !phoneNumber) {
       Alert.alert('Error', 'Please fill in all fields.');
       return;
@@ -19,9 +20,19 @@ export const useSignUpViewModel = (navigation) => {
       return;
     }
 
-    console.log('Signing up with:', { username, password, phoneNumber });
-    Alert.alert('Success', `Account created for ${username}`);
-    navigation.navigate('Login'); // hoặc điều hướng sang Home nếu cần
+    try {
+      const userData = {
+        email: username,
+        password: password,
+        name: username // Using username as name for now
+      };
+      
+      await authApi.signup(userData);
+      Alert.alert('Success', `Account created for ${username}`);
+      navigation.navigate('Login');
+    } catch (error) {
+      Alert.alert('Signup Failed', error.message || 'Could not create account.');
+    }
   };
 
   const handleGoogleSignUp = () => {

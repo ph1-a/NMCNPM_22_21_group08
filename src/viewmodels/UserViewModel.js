@@ -40,6 +40,7 @@
 
 // src/viewmodels/UserViewModel.js
 import { Alert } from 'react-native';
+import { tokenStorage } from '../utils/tokenStorage';
 
 export const useUserViewModel = (navigation) => {
 
@@ -81,8 +82,8 @@ export const useUserViewModel = (navigation) => {
           text: 'Log out',
           style: 'destructive',
           onPress: () => {
-            // Clear any stored user data/tokens here if needed
-            // For example: AsyncStorage.removeItem('userToken');
+            // Clear stored user data/tokens
+            tokenStorage.removeToken();
             console.log('User logged out');
             navigation.navigate('Login');
           },
