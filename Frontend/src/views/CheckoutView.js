@@ -516,7 +516,14 @@ const CheckoutView = ({ navigation, route }) => {
           <Text style={styles.sectionTitle}>Payment Method</Text>
           <TouchableOpacity 
             style={[styles.paymentOption, paymentMethod === 'card' && styles.selectedPayment]}
-            onPress={() => updatePaymentMethod('card')}
+            // onPress={() => updatePaymentMethod('card')}
+            onPress={() => {
+              updatePaymentMethod('card');
+              navigation.navigate('CardPayment', {
+                total, // truyền giá trị đơn hàng
+                onPaymentSuccess: () => handlePlaceOrder(userId, restaurantId), // xử lý sau khi thanh toán
+              });
+            }}
             disabled={isLoading}
           >
             <Icon name="credit-card" size={20} color={COLORS.textPrimary} />
