@@ -52,7 +52,7 @@ const RestaurantCard = memo(
           </View>
           
           <View style={styles.restaurantFooter}>
-            <Text style={styles.restaurantPriceRange}>$${Math.max(5, item.price - 5)} - ${item.price + 10}</Text>
+            <Text style={styles.restaurantPriceRange}>${Math.max(5, item.price - 5)} - ${item.price + 10}</Text>
             <TouchableOpacity style={styles.viewMenuButton}>
               <Text style={styles.viewMenuButtonText}>View Menu</Text>
               <Icon name="arrow-right" size={16} color={COLORS.primary} />
@@ -183,30 +183,97 @@ const SearchInput = memo(
     prevProps.onClear === nextProps.onClear,
 );
 
-// Filter Bar Component (unchanged)
-const FilterBar = memo(
-  ({ onFilterPress, onSortPress, resultCount }) => {
-    console.log('FilterBar rendered');
+// New Sort Bar Component with three separate buttons
+const SortBar = memo(
+  ({ onPriceSort, onRatingSort, onDistanceSort, activeSortBy, resultCount }) => {
+    console.log('SortBar rendered');
     return (
-      <View style={styles.filterBar}>
-        <View style={styles.filterButtonsContainer}>
-          <TouchableOpacity style={styles.filterButton} onPress={onFilterPress}>
-            <Text style={styles.filterButtonText}>Filter</Text>
-            <Icon name="chevron-down" size={16} color={COLORS.textPrimary} />
+      <View style={styles.sortBar}>
+        <View style={styles.sortButtonsContainer}>
+          <TouchableOpacity 
+            style={[
+              styles.sortButton, 
+              (activeSortBy === 'price_low' || activeSortBy === 'price_high') && styles.sortButtonActive
+            ]} 
+            onPress={onPriceSort}
+          >
+            <Icon 
+              name="dollar-sign" 
+              size={16} 
+              color={(activeSortBy === 'price_low' || activeSortBy === 'price_high') ? COLORS.primary : COLORS.textPrimary} 
+            />
+            <Text style={[
+              styles.sortButtonText,
+              (activeSortBy === 'price_low' || activeSortBy === 'price_high') && styles.sortButtonTextActive
+            ]}>
+              Price
+            </Text>
+            {(activeSortBy === 'price_low' || activeSortBy === 'price_high') && (
+              <Icon 
+                name={activeSortBy === 'price_low' ? 'arrow-up' : 'arrow-down'} 
+                size={14} 
+                color={COLORS.primary} 
+              />
+            )}
           </TouchableOpacity>
-          <TouchableOpacity style={styles.filterButton} onPress={onSortPress}>
-            <Text style={styles.filterButtonText}>Sort</Text>
-            <Icon name="chevron-down" size={16} color={COLORS.textPrimary} />
+
+          <TouchableOpacity 
+            style={[
+              styles.sortButton, 
+              activeSortBy === 'rating' && styles.sortButtonActive
+            ]} 
+            onPress={onRatingSort}
+          >
+            <Icon 
+              name="star" 
+              size={16} 
+              color={activeSortBy === 'rating' ? COLORS.primary : COLORS.textPrimary} 
+            />
+            <Text style={[
+              styles.sortButtonText,
+              activeSortBy === 'rating' && styles.sortButtonTextActive
+            ]}>
+              Rating
+            </Text>
+            {activeSortBy === 'rating' && (
+              <Icon name="arrow-down" size={14} color={COLORS.primary} />
+            )}
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={[
+              styles.sortButton, 
+              activeSortBy === 'distance' && styles.sortButtonActive
+            ]} 
+            onPress={onDistanceSort}
+          >
+            <Ionicons 
+              name="location-outline" 
+              size={16} 
+              color={activeSortBy === 'distance' ? COLORS.primary : COLORS.textPrimary} 
+            />
+            <Text style={[
+              styles.sortButtonText,
+              activeSortBy === 'distance' && styles.sortButtonTextActive
+            ]}>
+              Distance
+            </Text>
+            {activeSortBy === 'distance' && (
+              <Icon name="arrow-up" size={14} color={COLORS.primary} />
+            )}
           </TouchableOpacity>
         </View>
+        
         <Text style={styles.resultsText}>{resultCount} result(s)</Text>
       </View>
     );
   },
   (prevProps, nextProps) =>
     prevProps.resultCount === nextProps.resultCount &&
-    prevProps.onFilterPress === nextProps.onFilterPress &&
-    prevProps.onSortPress === nextProps.onSortPress,
+    prevProps.activeSortBy === nextProps.activeSortBy &&
+    prevProps.onPriceSort === nextProps.onPriceSort &&
+    prevProps.onRatingSort === nextProps.onRatingSort &&
+    prevProps.onDistanceSort === nextProps.onDistanceSort,
 );
 
 const SearchView = ({ navigation, route }) => {
@@ -218,10 +285,10 @@ const SearchView = ({ navigation, route }) => {
     resultCount,
     isLoading,
     error,
+    sortBy,
+    setSortBy,
     onOrderPress,
     onEditSearch,
-    onFilterPress,
-    onSortPress,
     onHomePress,
     onCartPress,
     onPersonPress,
@@ -304,6 +371,36 @@ const SearchView = ({ navigation, route }) => {
     });
   }, [navigation]);
 
+  // Sort button handlers
+  const handlePriceSort = useCallback(() => {
+    // Cycle between price_low, price_high, and back to relevance
+    if (sortBy === 'price_low') {
+      setSortBy('price_high');
+    } else if (sortBy === 'price_high') {
+      setSortBy('relevance');
+    } else {
+      setSortBy('price_low');
+    }
+  }, [sortBy, setSortBy]);
+
+  const handleRatingSort = useCallback(() => {
+    // Toggle between rating and relevance
+    if (sortBy === 'rating') {
+      setSortBy('relevance');
+    } else {
+      setSortBy('rating');
+    }
+  }, [sortBy, setSortBy]);
+
+  const handleDistanceSort = useCallback(() => {
+    // Toggle between distance and relevance
+    if (sortBy === 'distance') {
+      setSortBy('relevance');
+    } else {
+      setSortBy('distance');
+    }
+  }, [sortBy, setSortBy]);
+
   // Memoized callbacks
   const memoizedSetInputText = useCallback((text) => {
     setInputText(text);
@@ -332,9 +429,11 @@ const SearchView = ({ navigation, route }) => {
           onClear={memoizedOnEditSearch}
           inputRef={inputRef}
         />
-        <FilterBar
-          onFilterPress={onFilterPress}
-          onSortPress={onSortPress}
+        <SortBar
+          onPriceSort={handlePriceSort}
+          onRatingSort={handleRatingSort}
+          onDistanceSort={handleDistanceSort}
+          activeSortBy={sortBy}
           resultCount={resultCount}
         />
         {isLoading && (
@@ -354,8 +453,10 @@ const SearchView = ({ navigation, route }) => {
       memoizedSetInputText,
       memoizedHandleSubmit,
       memoizedOnEditSearch,
-      onFilterPress,
-      onSortPress,
+      handlePriceSort,
+      handleRatingSort,
+      handleDistanceSort,
+      sortBy,
       resultCount,
       isLoading,
       error,
@@ -426,17 +527,19 @@ const styles = StyleSheet.create({
     flex: 1,
     color: COLORS.textPrimary,
   },
-  filterBar: {
+  
+  // New Sort Bar Styles
+  sortBar: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: SIZES.padding,
   },
-  filterButtonsContainer: {
+  sortButtonsContainer: {
     flexDirection: 'row',
     gap: SIZES.base,
   },
-  filterButton: {
+  sortButton: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: COLORS.white,
@@ -447,9 +550,17 @@ const styles = StyleSheet.create({
     borderColor: COLORS.divider,
     gap: SIZES.base / 2,
   },
-  filterButtonText: {
+  sortButtonActive: {
+    backgroundColor: '#F3F8FF',
+    borderColor: COLORS.primary,
+  },
+  sortButtonText: {
     ...FONTS.body4,
     color: COLORS.textPrimary,
+  },
+  sortButtonTextActive: {
+    color: COLORS.primary,
+    fontWeight: '600',
   },
   resultsText: {
     ...FONTS.body4,

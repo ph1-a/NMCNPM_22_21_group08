@@ -26,18 +26,18 @@ const imageMap = {
 };
 
 // Sort offers by different criteria
-const sortOffers = (offers, sortBy = 'price_low') => {
+const sortOffers = (offers, sortBy = 'relevance') => {
   const sortedOffers = [...offers];
   
   switch (sortBy) {
     case 'rating':
-      return sortedOffers.sort((a, b) => b.rating - a.rating);
+      return sortedOffers.sort((a, b) => b.rating - a.rating); // Descending for rating
     case 'price_low':
-      return sortedOffers.sort((a, b) => a.price - b.price);
+      return sortedOffers.sort((a, b) => a.price - b.price); // Ascending for price
     case 'price_high':
-      return sortedOffers.sort((a, b) => b.price - a.price);
+      return sortedOffers.sort((a, b) => b.price - a.price); // Descending for price
     case 'distance':
-      return sortedOffers.sort((a, b) => a.distance - b.distance);
+      return sortedOffers.sort((a, b) => a.distance - b.distance); // Ascending for distance
     case 'reviews':
       return sortedOffers.sort((a, b) => b.reviewCount - a.reviewCount);
     default:
@@ -52,11 +52,6 @@ export const useSearchViewModel = (navigation, route) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [sortBy, setSortBy] = useState('relevance');
-  const [filters, setFilters] = useState({
-    maxPrice: null,
-    minRating: null,
-    maxDistance: null,
-  });
 
   useEffect(() => {
     if (initialTerm) {
@@ -105,6 +100,7 @@ export const useSearchViewModel = (navigation, route) => {
           distance: parseFloat(restaurant.distance) || 0,
           description: restaurant.description || '',
           image: restaurant.image || require('../assets/images/restaurant.jpg'),
+          type: 'restaurant',
           reviews: Array.isArray(restaurant.reviews) ? restaurant.reviews
             .filter(review => review && review.id) // Filter out invalid reviews
             .map(review => ({
@@ -126,16 +122,17 @@ export const useSearchViewModel = (navigation, route) => {
         .map(food => ({
           id: food.id,
           name: food.name || 'Unknown Dish',
-          restaurant: food.Restaurant?.name || food.restaurantName || 'Unknown Restaurant',
-          restaurantName: food.Restaurant?.name || food.restaurantName || 'Unknown Restaurant',
+          restaurant: food.restaurantName || 'Unknown Restaurant',
+          restaurantName: food.restaurantName || 'Unknown Restaurant',
           dishName: food.name || 'Unknown Dish',
           price: parseFloat(food.price) || 0,
           rating: parseFloat(food.rating) || 0,
           reviewCount: parseInt(food.reviewCount) || 0,
           distance: parseFloat(food.distance) || 0,
           description: food.description || '',
-          image: imageMap[food.image],
-          reviews: Array.isArray(food.Reviews) ? food.Reviews
+          image: imageMap[food.image] || require('../assets/images/food(1).jpg'),
+          type: 'dish',
+          reviews: Array.isArray(food.reviews) ? food.reviews
             .filter(review => review && review.id) // Filter out invalid reviews
             .map(review => ({
               id: review.id,
@@ -148,13 +145,13 @@ export const useSearchViewModel = (navigation, route) => {
       transformedResults.push(...foodResults);
     }
 
-    console.log('SearchViewModel: transformApiResults - final transformed count:', transformedResults.length);
+    console.log('SearchViewModel: transformApiResults - total transformed results:', transformedResults.length);
     return transformedResults;
   };
 
   // Enhanced search function using the API
-  const performSearch = async (term, currentSortBy = sortBy, currentFilters = filters) => {
-    console.log('SearchViewModel: Starting search with term:', term);
+  const performSearch = useCallback(async (term, currentSortBy = sortBy) => {
+    console.log('SearchViewModel: Starting search with term:', term, 'sort:', currentSortBy);
     
     if (!term || term.trim() === '') {
       console.log('SearchViewModel: Empty search term, clearing results');
@@ -167,10 +164,20 @@ export const useSearchViewModel = (navigation, route) => {
     setError(null);
 
     try {
-      console.log('SearchViewModel: Calling search API with term:', term, 'filters:', currentFilters);
+      console.log('SearchViewModel: Calling search API with term:', term, 'sort:', currentSortBy);
       
-      // Call the search API
-      const searchResults = await searchApi.search(term, currentFilters);
+      // Check if searchApi has the search method, otherwise use the default function
+      let searchResults;
+      if (searchApi && typeof searchApi.search === 'function') {
+        searchResults = await searchApi.search(term, {
+          sortBy: currentSortBy
+        });
+      } else if (typeof searchApi === 'function') {
+        searchResults = await searchApi(term);
+      } else {
+        throw new Error('Search API not available');
+      }
+      
       console.log('SearchViewModel: Received search results:', searchResults);
       
       // Check if API returned valid data
@@ -201,7 +208,7 @@ export const useSearchViewModel = (navigation, route) => {
         return;
       }
       
-      // Sort results
+      // Apply client-side sorting (in case API doesn't handle it)
       const sortedResults = sortOffers(transformedResults, currentSortBy);
       console.log('SearchViewModel: Final sorted results:', sortedResults);
       
@@ -225,152 +232,113 @@ export const useSearchViewModel = (navigation, route) => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [sortBy, error]);
 
-  // Trigger search when searchTerm, sortBy, or filters change
+  // Effect to trigger search when searchTerm changes
   useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      performSearch(searchTerm, sortBy, filters);
-    }, 300); // Debounce search by 300ms
+    if (searchTerm) {
+      performSearch(searchTerm);
+    } else {
+      setResults([]);
+    }
+  }, [searchTerm, performSearch]);
 
-    return () => clearTimeout(timeoutId);
-  }, [searchTerm, sortBy, filters]);
+  // Sort functions that handle cycling through sort options
+  const onPriceSort = useCallback(() => {
+    let newSortBy;
+    if (sortBy === 'price_low') {
+      newSortBy = 'price_high';
+    } else if (sortBy === 'price_high') {
+      newSortBy = 'relevance';
+    } else {
+      newSortBy = 'price_low';
+    }
+    
+    setSortBy(newSortBy);
+    if (searchTerm && results.length > 0) {
+      // Apply sorting to existing results immediately for better UX
+      const sortedResults = sortOffers(results, newSortBy);
+      setResults(sortedResults);
+    }
+  }, [sortBy, searchTerm, results]);
+
+  const onRatingSort = useCallback(() => {
+    const newSortBy = sortBy === 'rating' ? 'relevance' : 'rating';
+    setSortBy(newSortBy);
+    if (searchTerm && results.length > 0) {
+      // Apply sorting to existing results immediately for better UX
+      const sortedResults = sortOffers(results, newSortBy);
+      setResults(sortedResults);
+    }
+  }, [sortBy, searchTerm, results]);
+
+  const onDistanceSort = useCallback(() => {
+    const newSortBy = sortBy === 'distance' ? 'relevance' : 'distance';
+    setSortBy(newSortBy);
+    if (searchTerm && results.length > 0) {
+      // Apply sorting to existing results immediately for better UX
+      const sortedResults = sortOffers(results, newSortBy);
+      setResults(sortedResults);
+    }
+  }, [sortBy, searchTerm, results]);
+
+  // Retry search function
+  const retrySearch = useCallback(() => {
+    if (searchTerm) {
+      performSearch(searchTerm);
+    }
+  }, [searchTerm, performSearch]);
 
   // Navigation handlers
   const onOrderPress = useCallback((item) => {
-    console.log(`Order pressed for item: ${item.id}`);
-    
-    // Transform offer to cart item format
-    const cartItem = {
-      id: item.id,
-      brand: item.restaurantName,
-      name: item.dishName || item.name,
-      description: `${item.rating} ⭐ • ${item.distance} miles • ${item.reviewCount} reviews`,
-      price: item.price,
-      quantity: 1,
-      image: item.image,
-    };
-    
-    navigation.navigate('Checkout', { 
-      selectedItems: [cartItem],
-      foodItem: item 
-    });
-  }, [navigation]);
-
-  const onItemPress = useCallback((item) => {
-    console.log(`Item pressed: ${item.id}`);
-    
-    // Navigate to dish detail with the complete offer data
-    navigation.navigate('DishDetail', { 
-      dish: item 
-    });
-  }, [navigation]);
+    console.log('SearchViewModel: onOrderPress - item:', item);
+    // This will be handled in the SearchView component
+  }, []);
 
   const onEditSearch = useCallback(() => {
-    console.log('Clear search input');
     setSearchTerm('');
     setResults([]);
     setError(null);
+    setSortBy('relevance');
   }, []);
 
-  const onFilterPress = useCallback(() => {
-    console.log('Filter button pressed');
-    // Cycle through price filters
-    const currentMaxPrice = filters.maxPrice;
-    const priceFilters = [null, 15, 25, 35]; // null means no filter
-    const currentIndex = priceFilters.indexOf(currentMaxPrice);
-    const nextIndex = (currentIndex + 1) % priceFilters.length;
-    
-    setFilters(prev => ({
-      ...prev,
-      maxPrice: priceFilters[nextIndex]
-    }));
-  }, [filters.maxPrice]);
-
-  const onSortPress = useCallback(() => {
-    console.log('Sort button pressed');
-    // Cycle through sort options
-    const sortOptions = ['relevance', 'rating', 'price_low', 'price_high', 'distance', 'reviews'];
-    const currentIndex = sortOptions.indexOf(sortBy);
-    const nextIndex = (currentIndex + 1) % sortOptions.length;
-    setSortBy(sortOptions[nextIndex]);
-  }, [sortBy]);
+  const onHomePress = useCallback(() => {
+    navigation.navigate('Home');
+  }, [navigation]);
 
   const onCartPress = useCallback(() => {
-    console.log('Navigate to cart');
     navigation.navigate('Cart');
   }, [navigation]);
 
   const onPersonPress = useCallback(() => {
-    console.log('Navigate to user profile');
-    navigation.navigate('User');
+    navigation.navigate('Profile');
   }, [navigation]);
 
-  const onHomePress = useCallback(() => {
-    console.log('Navigate to home');
-    navigation.navigate('Home');
-  }, [navigation]);
-
-  // Retry search function for error recovery
-  const retrySearch = useCallback(() => {
-    if (searchTerm) {
-      performSearch(searchTerm, sortBy, filters);
-    }
-  }, [searchTerm, sortBy, filters]);
-
-  // Helper function to get current sort display text
-  const getSortDisplayText = () => {
-    const sortLabels = {
-      relevance: 'Relevance',
-      rating: 'Rating',
-      price_low: 'Price: Low to High',
-      price_high: 'Price: High to Low',
-      distance: 'Distance',
-      reviews: 'Most Reviewed'
-    };
-    return sortLabels[sortBy] || 'Sort';
-  };
-
-  // Helper function to get current filter display text
-  const getFilterDisplayText = () => {
-    if (filters.maxPrice) {
-      return `Under $${filters.maxPrice}`;
-    }
-    if (filters.minRating) {
-      return `${filters.minRating}+ Stars`;
-    }
-    if (filters.maxDistance) {
-      return `Within ${filters.maxDistance} miles`;
-    }
-    return 'Filter';
-  };
+  // Computed values
+  const resultCount = results.length;
 
   return {
     // Search state
     searchTerm,
     setSearchTerm,
     results,
-    resultCount: results.length,
+    resultCount,
     isLoading,
     error,
     
-    // Sort and filter state
+    // Sort state
     sortBy,
     setSortBy,
-    filters,
-    setFilters,
-    getSortDisplayText,
-    getFilterDisplayText,
     
     // Action handlers
     onOrderPress,
-    onItemPress,
     onEditSearch,
-    onFilterPress,
-    onSortPress,
+    onPriceSort,
+    onRatingSort,
+    onDistanceSort,
+    onHomePress,
     onCartPress,
     onPersonPress,
-    onHomePress,
     retrySearch,
     
     // Utility functions
