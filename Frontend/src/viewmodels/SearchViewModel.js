@@ -59,7 +59,7 @@ export const useSearchViewModel = (navigation, route) => {
     }
   }, [initialTerm]);
 
-  // Transform API response to match frontend data structure
+  // Transform API response to match frontend data structure (FIXED - now matches HomeViewModel)
   const transformApiResults = (searchResults) => {
     // Strict validation - return empty array if no valid data
     if (!searchResults) {
@@ -114,7 +114,7 @@ export const useSearchViewModel = (navigation, route) => {
       transformedResults.push(...restaurantResults);
     }
 
-    // Transform foods/dishes only if they exist and have data
+    // Transform foods/dishes only if they exist and have data (FIXED - now handles Reviews array like HomeViewModel)
     if (hasValidFoods) {
       console.log('SearchViewModel: transformApiResults - processing foods:', searchResults.foods.length);
       const foodResults = searchResults.foods
@@ -122,8 +122,8 @@ export const useSearchViewModel = (navigation, route) => {
         .map(food => ({
           id: food.id,
           name: food.name || 'Unknown Dish',
-          restaurant: food.restaurantName || 'Unknown Restaurant',
-          restaurantName: food.restaurantName || 'Unknown Restaurant',
+          restaurant: food.Restaurant?.name || food.restaurantName || 'Unknown Restaurant',
+          restaurantName: food.Restaurant?.name || food.restaurantName || 'Unknown Restaurant',
           dishName: food.name || 'Unknown Dish',
           price: parseFloat(food.price) || 0,
           rating: parseFloat(food.rating) || 0,
@@ -132,7 +132,16 @@ export const useSearchViewModel = (navigation, route) => {
           description: food.description || '',
           image: imageMap[food.image] || require('../assets/images/food(1).jpg'),
           type: 'dish',
-          reviews: Array.isArray(food.reviews) ? food.reviews
+          // FIXED: Now handles both Reviews (capital R) and reviews (lowercase r) like HomeViewModel
+          reviews: Array.isArray(food.Reviews) ? food.Reviews
+            .filter(review => review && review.id) // Filter out invalid reviews
+            .map(review => ({
+              id: review.id,
+              username: review.username || 'Anonymous',
+              userInitial: review.userInitial || review.username?.charAt(0)?.toUpperCase() || 'A',
+              comment: review.comment || '',
+              rating: parseFloat(review.rating) || 0
+            })) : Array.isArray(food.reviews) ? food.reviews
             .filter(review => review && review.id) // Filter out invalid reviews
             .map(review => ({
               id: review.id,
@@ -292,8 +301,15 @@ export const useSearchViewModel = (navigation, route) => {
   // Navigation handlers
   const onOrderPress = useCallback((item) => {
     console.log('SearchViewModel: onOrderPress - item:', item);
-    // This will be handled in the SearchView component
-  }, []);
+    // Navigate to DishDetail with the complete item data including reviews
+    if (!item) {
+      console.error('SearchViewModel: onOrderPress - item is null/undefined');
+      return;
+    }
+    
+    console.log('SearchViewModel: Navigating to DishDetail with item:', item.name || item.dishName);
+    navigation.navigate('DishDetail', { dish: item });
+  }, [navigation]);
 
   const onEditSearch = useCallback(() => {
     setSearchTerm('');
