@@ -21,9 +21,9 @@ const OrderItem = sequelize.define('OrderItem', {
     defaultValue: 1
   },
   price: {
-    type: DataTypes.DECIMAL(10, 2),
+    type: DataTypes.FLOAT, // Changed to FLOAT to match your DB schema
     allowNull: false
   }
 });
 
-module.exports = OrderItem; 
+module.exports = OrderItem;

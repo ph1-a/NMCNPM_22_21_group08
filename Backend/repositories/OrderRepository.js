@@ -6,22 +6,13 @@ module.exports = {
   createOrder: async (orderData, items) => {
     const order = await Order.create(orderData);
     
-    // Fetch menu items to get prices
-    const menuItems = await Promise.all(
-      items.map(item => MenuItem.findByPk(item.foodId))
-    );
-
-    // Create order items with proper mapping
-    const orderItems = items.map((item, index) => {
-      const menuItem = menuItems[index];
-      if (!menuItem) {
-        throw new Error(`Menu item ${item.foodId} not found`);
-      }
+    // Create order items using the provided data
+    const orderItems = items.map((item) => {
       return {
         orderId: order.id,
-        itemId: item.foodId,
+        itemId: item.menuItemId, // Changed from foodId to menuItemId
         quantity: item.quantity,
-        price: menuItem.price
+        price: item.price // Use price from request
       };
     });
 

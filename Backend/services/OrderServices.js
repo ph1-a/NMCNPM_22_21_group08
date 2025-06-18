@@ -2,14 +2,14 @@ const OrderRepository = require('../repositories/OrderRepository');
 
 module.exports = {
   placeOrder: async (data) => {
-    const { userId, restaurantId, items, address } = data;
+    const { userId, restaurantId, items, address, expectedTotal } = data;
 
     const orderData = {
       userId,
       restaurantId,
       address,
       status: 'Pending',
-      total: 0 // Will be calculated in repository
+      total: expectedTotal // Use expectedTotal directly
     };
 
     return await OrderRepository.createOrder(orderData, items);
