@@ -26,6 +26,12 @@ module.exports = {
     });
 
     await OrderItem.bulkCreate(orderItems);
+    
+    // Calculate and update the order total
+    const total = orderItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    order.total = total;
+    await order.save();
+    
     return order;
   },
 

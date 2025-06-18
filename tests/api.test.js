@@ -61,11 +61,11 @@ describe('API Endpoints', () => {
         .set('Authorization', `Bearer ${authToken}`)
         .send({
           items: [
-            { dishId: 1, quantity: 2 }
+            { foodId: 1, quantity: 2 }
           ],
-          deliveryAddress: '123 Test St'
+          address: '123 Test St'
         });
-      expect(res.statusCode).toBe(200);
+      expect(res.statusCode).toBe(201);
       expect(res.body).toHaveProperty('orderId');
     });
 
@@ -77,5 +77,4 @@ describe('API Endpoints', () => {
       expect(Array.isArray(res.body)).toBe(true);
     });
   });
-}); 
 }); 

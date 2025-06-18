@@ -13,7 +13,7 @@ const Order = sequelize.define('Order', {
   },
   restaurantId: {
     type: DataTypes.UUID,
-    allowNull: false
+    allowNull: true
   },
   address: {
     type: DataTypes.STRING,

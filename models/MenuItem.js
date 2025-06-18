@@ -1,6 +1,5 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
-const Restaurant = require('./Restaurant');
 
 const MenuItem = sequelize.define('MenuItem', {
   id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
@@ -11,9 +10,8 @@ const MenuItem = sequelize.define('MenuItem', {
   reviewCount: { type: DataTypes.INTEGER, defaultValue: 0 },
   distance: { type: DataTypes.FLOAT, defaultValue: 0 },
   image: { type: DataTypes.STRING },
-  description: { type: DataTypes.STRING }
+  description: { type: DataTypes.STRING },
+  restaurantId: { type: DataTypes.UUID, allowNull: false }
 });
-
-MenuItem.belongsTo(Restaurant); // MenuItem.restaurantId
 
 module.exports = MenuItem;
